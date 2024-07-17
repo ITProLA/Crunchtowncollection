@@ -1,80 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Upload</title>
-    <style>
-        .upload-container {
-            border: 2px dashed #0087F7;
-            border-radius: 10px;
-            background: white;
-            min-height: 150px;
-            padding: 54px 54px;
-            text-align: center;
-            font: 20px sans-serif;
-            color: #333;
-            margin-top: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        .upload-container input {
-            display: none;
-        }
-
-        .upload-container:hover {
-            background: #f0f0f0;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Upload</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .upload-box {
+      border: 2px dashed #ccc;
+      padding: 20px;
+      text-align: center;
+      width: 300px;
+      margin-top: 20px;
+    }
+    .upload-box input {
+      display: none;
+    }
+    .upload-box label {
+      display: block;
+      background-color: #007bff;
+      color: white;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
-    <div id="upload-container" class="upload-container">
-        Click to upload a file
-        <input type="file" id="fileInput" accept="image/*">
-    </div>
+  <h1>Upload Your File</h1>
+  <div class="upload-box">
+    <input type="file" id="fileInput" accept="image/*">
+    <label for="fileInput">Choose a file</label>
+  </div>
+  <script>
+    document.getElementById('fileInput').addEventListener('change', async function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
 
-    <script>
-        document.getElementById('upload-container').addEventListener('click', function() {
-            document.getElementById('fileInput').click();
+      try {
+        const response = await fetch('https://www.crunchtowncollection.com/_functions/getCloudinarySignature', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
 
-        document.getElementById('fileInput').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (!file) {
-                return;
-            }
+        if (!response.ok) throw new Error('Failed to fetch signature');
 
-            fetch('https://www.crunchtowncollection.com/_functions/getCloudinarySignature', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('timestamp', data.timestamp);
-                formData.append('api_key', data.apiKey);
-                formData.append('signature', data.signature);
-                formData.append('upload_preset', 'Crunchtown_Upload');
+        const { signature, timestamp, apiKey } = await response.json();
 
-                return fetch(`https://api.cloudinary.com/v1_1/${data.cloudName}/image/upload`, {
-                    method: 'POST',
-                    body: formData,
-                });
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('File uploaded successfully', data);
-            })
-            .catch(error => {
-                console.error('Error uploading file:', error);
-            });
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('api_key', apiKey);
+        formData.append('timestamp', timestamp);
+        formData.append('signature', signature);
+        formData.append('upload_preset', 'Crunchtown_Upload');
+
+        const uploadResponse = await fetch('https://api.cloudinary.com/v1_1/dvekrw4yu/image/upload', {
+          method: 'POST',
+          body: formData
         });
-    </script>
+
+        const uploadResult = await uploadResponse.json();
+        console.log('Upload Result:', uploadResult);
+      } catch (error) {
+        console.error('Error uploading file:', error);
+      }
+    });
+  </script>
 </body>
 </html>

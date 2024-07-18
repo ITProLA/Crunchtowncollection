@@ -7,68 +7,75 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
         }
-        #uploadForm {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
+        #upload-form {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        input[type="file"] {
-            margin: 20px;
-            padding: 10px;
-            border: 1px solid #ccc;
+        #fileInput {
+            display: block;
+            margin-bottom: 10px;
+        }
+        #uploadButton {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
             border-radius: 5px;
         }
-        #uploadStatus {
-            margin-top: 20px;
-            font-size: 1em;
-            color: #333;
+        #uploadButton:hover {
+            background-color: #45a049;
+        }
+        #message {
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <div id="uploadForm">
-        <input type="file" id="fileUpload" />
-        <div id="uploadStatus"></div>
+    <div id="upload-form">
+        <input type="file" id="fileInput">
+        <button id="uploadButton" onclick="uploadFile()">Upload</button>
+        <div id="message"></div>
     </div>
     <script>
-        const cloudName = 'dvekrw4yu';
-        const uploadPreset = 'Crunchtown_Upload';
+        async function getSignature() {
+            const response = await fetch('https://www.crunchtowncollection.com/_functions/getCloudinarySignature');
+            return response.json();
+        }
 
-        async function uploadFile(file) {
+        async function uploadFile() {
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) {
+                document.getElementById('message').innerText = 'Please select a file first.';
+                return;
+            }
+
+            const { signature, apiKey, timestamp } = await getSignature();
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', 'Crunchtown_Upload');
+            formData.append('api_key', apiKey);
+            formData.append('timestamp', timestamp);
+            formData.append('signature', signature);
+
             try {
-                const response = await fetch('https://www.crunchtowncollection.com/print-your-design/functions/getCloudinarySignature');
-                if (!response.ok) throw new Error('Network response was not ok');
-                const { signature, timestamp, apiKey } = await response.json();
-
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('api_key', apiKey);
-                formData.append('timestamp', timestamp);
-                formData.append('signature', signature);
-                formData.append('upload_preset', uploadPreset);
-
-                const cloudinaryResponse = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                const response = await fetch('https://api.cloudinary.com/v1_1/dvekrw4yu/image/upload', {
                     method: 'POST',
                     body: formData
                 });
-
-                if (!cloudinaryResponse.ok) throw new Error('Upload failed');
-                const result = await cloudinaryResponse.json();
-                document.getElementById('uploadStatus').textContent = `File uploaded successfully: ${result.secure_url}`;
-                console.log(result);
+                const data = await response.json();
+                document.getElementById('message').innerText = `Upload successful! Image dimensions: ${data.width}x${data.height}`;
             } catch (error) {
-                document.getElementById('uploadStatus').textContent = `Error uploading file: ${error.message}`;
-                console.error('Error:', error);
+                console.error('Error uploading file:', error);
+                document.getElementById('message').innerText = 'Upload failed. Please try again.';
             }
         }
-
-        document.querySelector('#fileUpload').addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            uploadFile(file);
-        });
     </script>
 </body>
 </html>

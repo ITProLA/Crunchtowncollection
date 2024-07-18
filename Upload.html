@@ -42,7 +42,6 @@
         <button onclick="uploadFile()">Upload</button>
     </div>
 
-    <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
     <script>
         async function uploadFile() {
             const file = document.getElementById('fileInput').files[0];
@@ -51,23 +50,24 @@
                 return;
             }
 
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', 'YOUR_UPLOAD_PRESET'); // Replace with your actual upload preset
-            formData.append('api_key', 'YOUR_CLOUDINARY_API_KEY'); // Replace with your actual API key
-
             try {
-                const response = await fetch('https://api.cloudinary.com/v1_1/dvekrw4yu/image/upload', {
+                const response = await fetch('https://www.crunchtowncollection.com/_functions/getCloudinarySignature');
+                const data = await response.json();
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('api_key', data.apiKey);
+                formData.append('timestamp', data.timestamp);
+                formData.append('signature', data.signature);
+                formData.append('folder', 'uploads');
+
+                const cloudinaryResponse = await fetch(`https://api.cloudinary.com/v1_1/${data.cloudName}/image/upload`, {
                     method: 'POST',
                     body: formData
                 });
 
-                const data = await response.json();
-                console.log('File uploaded successfully:', data);
-                const dimensions = { width: data.width, height: data.height };
-
-                // Post dimensions back to the Wix site
-                window.parent.postMessage(dimensions, '*');
+                const cloudinaryData = await cloudinaryResponse.json();
+                console.log('File uploaded successfully:', cloudinaryData);
 
             } catch (error) {
                 console.error('Error uploading file:', error);

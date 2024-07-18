@@ -12,11 +12,21 @@
             padding: 20px;
             border-radius: 10px;
         }
+        #upload-container input[type="file"] {
+            display: none;
+        }
+        #upload-container label {
+            display: block;
+            cursor: pointer;
+            color: #0066cc;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
 <div id="upload-container">
     <input type="file" id="file-input" />
+    <label for="file-input">Choose a file</label>
     <button onclick="uploadFile()">Upload</button>
 </div>
 

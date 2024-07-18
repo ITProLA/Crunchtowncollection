@@ -1,62 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>File Upload</title>
-  <style>
-    /* Add your CSS here */
-    .upload-box {
-      border: 2px dashed #ccc;
-      padding: 20px;
-      text-align: center;
-      margin: 20px;
-    }
-    .upload-box input[type="file"] {
-      display: none;
-    }
-    .upload-box label {
-      display: inline-block;
-      padding: 10px 20px;
-      background-color: #007BFF;
-      color: #fff;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload to Cloudinary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .upload-box {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .upload-box input {
+            margin: 10px 0;
+        }
+        .upload-box button {
+            padding: 10px 20px;
+            border: none;
+            background: #007BFF;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-  <div class="upload-box">
-    <input type="file" id="fileInput" />
-    <label for="fileInput">Upload File</label>
-  </div>
-  <script>
-    document.getElementById('fileInput').addEventListener('change', async function(event) {
-      const file = event.target.files[0];
-      if (file) {
-        try {
-          const response = await fetch('https://www.crunchtowncollection.com/_functions/getCloudinarySignature');
-          const data = await response.json();
+    <div class="upload-box">
+        <h1>Upload to Cloudinary</h1>
+        <input type="file" id="fileInput" accept="image/*">
+        <button onclick="uploadFile()">Upload</button>
+    </div>
 
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('api_key', data.apiKey);
-          formData.append('timestamp', data.timestamp);
-          formData.append('signature', data.signature);
-          formData.append('upload_preset', 'Crunchtown_Upload');
+    <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
+    <script>
+        async function uploadFile() {
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) {
+                alert('Please select a file to upload.');
+                return;
+            }
 
-          const uploadResponse = await fetch('https://api.cloudinary.com/v1_1/dvekrw4yu/image/upload', {
-            method: 'POST',
-            body: formData
-          });
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', 'YOUR_UPLOAD_PRESET'); // Replace with your actual upload preset
+            formData.append('api_key', 'YOUR_CLOUDINARY_API_KEY'); // Replace with your actual API key
 
-          const uploadResult = await uploadResponse.json();
-          console.log('Upload successful:', uploadResult);
-        } catch (error) {
-          console.error('Error uploading file:', error);
+            try {
+                const response = await fetch('https://api.cloudinary.com/v1_1/dvekrw4yu/image/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                console.log('File uploaded successfully:', data);
+                const dimensions = { width: data.width, height: data.height };
+
+                // Post dimensions back to the Wix site
+                window.parent.postMessage(dimensions, '*');
+
+            } catch (error) {
+                console.error('Error uploading file:', error);
+            }
         }
-      }
-    });
-  </script>
+    </script>
 </body>
 </html>
